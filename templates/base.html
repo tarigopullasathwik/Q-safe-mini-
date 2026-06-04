@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Q-SAFE Nexus{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Primary navigation shared across every page. -->
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="{{ url_for('home') }}">Q-SAFE Nexus</a>
+            <div class="nav-links">
+                <a href="{{ url_for('upload') }}">Upload</a>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Page-specific content is rendered here. -->
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

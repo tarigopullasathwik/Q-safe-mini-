@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Q-SAFE Nexus{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <p class="eyebrow">Secure migration workspace</p>
+    <h1>Q-SAFE Nexus</h1>
+    <p>
+        A foundation for quantum-safe encryption workflows, secure transfer,
+        and file analysis.
+    </p>
+    <div class="actions">
+        <a class="button" href="{{ url_for('upload') }}">Upload File</a>
+        <a class="button secondary" href="{{ url_for('dashboard') }}">View Dashboard</a>
+    </div>
+</section>
+{% endblock %}

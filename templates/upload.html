@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Upload | Q-SAFE Nexus{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="cyber-panel">
+    <p class="terminal-label">Q-SAFE NEXUS // SECURE INTAKE</p>
+    <h1>Secure File Upload & Simulation</h1>
+    <form class="cyber-form" method="post" enctype="multipart/form-data">
+        <div class="file-input-wrapper">
+            <label for="file">Select Target File</label>
+            <input id="file" name="file" type="file" class="cyber-input-file" required>
+        </div>
+
+        <div class="attack-simulation-group">
+            <h3>Attack Simulation Engine</h3>
+            <label class="cyber-checkbox-label">
+                <input type="checkbox" name="simulate_mitm" value="1">
+                <span>Simulate MITM Attack (Eavesdropping on BB84 Quantum Channel)</span>
+            </label>
+            <label class="cyber-checkbox-label">
+                <input type="checkbox" name="simulate_replay" value="1">
+                <span>Simulate Replay Attack (Intercept & replay transmission)</span>
+            </label>
+            <label class="cyber-checkbox-label">
+                <input type="checkbox" name="simulate_tampering" value="1">
+                <span>Simulate File Tampering (Altering ciphertext bytes in-transit)</span>
+            </label>
+        </div>
+
+        <button type="submit" class="cyber-btn">Upload & Execute Pipeline</button>
+    </form>
+
+    {% if error %}
+    <p class="message error">{{ error }}</p>
+    {% endif %}
+
+    {% if uploaded_file_name %}
+    <p class="message success">Successfully uploaded: {{ uploaded_file_name }}</p>
+    {% endif %}
+
+    {% if result %}
+    <div class="result-details">
+        <h3>Pipeline Diagnostics</h3>
+        <ul>
+            <li>
+                <span>Original File Name:</span>
+                <strong>{{ result.file_name }}</strong>
+            </li>
+            <li>
+                <span>Security Score:</span>
+                <strong class="{% if result.security_status == 'SAFE' %}status-safe{% elif result.security_status == 'WARNING' %}status-warning{% else %}status-danger{% endif %}">
+                    {{ 100 - result.risk_score }} / 100
+                </strong>
+            </li>
+            <li>
+                <span>Security Status:</span>
+                <span class="badge {% if result.security_status == 'SAFE' %}safe{% elif result.security_status == 'WARNING' %}warning{% else %}danger{% endif %}">
+                    {{ result.security_status }}
+                </span>
+            </li>
+            <li>
+                <span>Encryption Payload:</span>
+                <strong>{{ result.encrypted_file_name }} ({{ result.encryption_status }})</strong>
+            </li>
+            <li>
+                <span>BB84 Key Negotiated:</span>
+                <strong>{{ result.bb84_key_length }} bits (QBER: {{ "{:.2f}".format(result.bb84_qber * 100) }}%)</strong>
+            </li>
+            <li>
+                <span>Quantum Eavesdropping:</span>
+                {% if result.bb84_eavesdropping_detected %}
+                <span class="status-danger"><strong>DETECTED (MITM ACTIVE)</strong></span>
+                {% else %}
+                <span class="status-safe"><strong>None Detected</strong></span>
+                {% endif %}
+            </li>
+            <li>
+                <span>Transfer Integrity:</span>
+                {% if result.transfer_integrity %}
+                <span class="status-safe"><strong>VERIFIED (PASS)</strong></span>
+                {% else %}
+                <span class="status-danger"><strong>COMPROMISED (TAMPERED)</strong></span>
+                {% endif %}
+            </li>
+            <li>
+                <span>Replay Attack Prevention:</span>
+                {% if result.replay_simulated %}
+                <span class="status-warning"><strong>BLOCKED REPLAY ATTEMPT</strong></span>
+                {% else %}
+                <span class="status-safe"><strong>Inactive</strong></span>
+                {% endif %}
+            </li>
+        </ul>
+
+        {% if result.v2_breakdown %}
+        <div class="v2-result-card">
+            <div class="v2-result-header">
+                <span class="v2-badge-sm">SCORE ENGINE v2</span>
+                <strong class="v2-result-score
+                    {% if result.v2_breakdown.total_score >= 85 %}score-safe
+                    {% elif result.v2_breakdown.total_score >= 60 %}score-low
+                    {% elif result.v2_breakdown.total_score >= 30 %}score-medium
+                    {% else %}score-high{% endif %}">
+                    {{ result.v2_breakdown.total_score }} / 100
+                </strong>
+                <span class="category-pill cat-{{ result.v2_breakdown.risk_category | lower | replace(' ', '-') }}">
+                    {{ result.v2_breakdown.risk_category }}
+                </span>
+            </div>
+            <div class="v2-mini-bars">
+                {% set mini_dims = [
+                    ('Encryption',   result.v2_breakdown.encryption_score,  25, '#00ff9c'),
+                    ('BB84 QBER',    result.v2_breakdown.bb84_score,         25, '#38bdf8'),
+                    ('Transfer',     result.v2_breakdown.transfer_score,     25, '#a78bfa'),
+                    ('Security',     result.v2_breakdown.threat_score,       15, '#fbbf24'),
+                    ('Attack',       result.v2_breakdown.attack_score,       10, '#f87171'),
+                ] %}
+                {% for lbl, sc, wt, col in mini_dims %}
+                <div class="mini-dim">
+                    <span class="mini-lbl">{{ lbl }}</span>
+                    <div class="mini-track">
+                        <div class="mini-fill" style="width:{{ ((sc/wt)*100)|round|int }}%; background:{{ col }};"></div>
+                    </div>
+                    <span class="mini-val" style="color:{{ col }}">{{ sc }}/{{ wt }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% if result.v2_breakdown.deductions %}
+            <ul class="deduction-list">
+                {% for d in result.v2_breakdown.deductions %}
+                <li>⚠ {{ d }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
